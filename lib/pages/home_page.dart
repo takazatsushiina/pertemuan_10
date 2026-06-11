@@ -154,6 +154,7 @@ class _HomePageState extends State<HomePage> {
           padding: const EdgeInsets.all(20),
           child: Column(
             children: [
+              // Header Bagian Atas
               Container(
                 height: 100,
                 padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
@@ -203,6 +204,7 @@ class _HomePageState extends State<HomePage> {
                         ],
                       ),
                     ),
+                    // Tombol Logout
                     GestureDetector(
                       onTap: logout,
                       child: Container(
@@ -228,6 +230,7 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               const SizedBox(height: 20),
+              // Daftar Produk diletakkan di luar header (di bawahnya) agar layout tidak error
               Expanded(
                 child: products.isEmpty
                     ? const Center(child: Text("Belum ada produk"))
@@ -281,6 +284,7 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
       ),
+      // Fungsi Increment untuk menambah produk
       floatingActionButton: FloatingActionButton(
         onPressed: () => showForm(),
         backgroundColor: Colors.purple,
