@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pertemuan_10/models/product_models.dart';
 import 'login_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'product_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -15,120 +16,28 @@ class _HomePageState extends State<HomePage> {
   
   // variabel utama dari daftar product 
   List<ProductModel> products = [];
+  int totalProducts = 0;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     getUser();
-    loadProducts();
   }
-  
-  // metode load product
+
   Future<void> loadProducts() async {
     final res = await SharedPreferences.getInstance();
     List<String> productList = res.getStringList('products') ?? [];
+    totalProducts = productList.length;
     setState(() {
       products = productList 
+      .reversed
+      .take(3)
       .map((item) => ProductModel.fromJson(item))
       .toList();
     });
   }
-
-  //metode save product
-  Future<void> saveProducts() async {
-    final res = await SharedPreferences.getInstance();
-    List<String> productList = products.map((item) => item.toJson()).toList();
-    await res.setStringList('products', productList);
-  }
-
-  //metode add product
-  Future<void> addProducts(ProductModel product) async {
-    setState(() {
-      products.add(product);
-    });
-
-    await saveProducts();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Produk berhasil ditambahkan")),
-      );
-  }
-
-
-  // metode update product
-  Future<void> updateProducts(int index, ProductModel product) async {
-    setState(() {
-      products[index] = product;
-    });
-
-    await saveProducts();
-  }
-
-  //metode delete product 
-  Future<void> deleteProducts(int index) async {
-    setState(() {
-      products.removeAt(index);
-    });
-
-    await saveProducts();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Produk berhasil dihapus")),
-      );
-  }
-
-  void showForm({ProductModel? product, int? index}) {
-    TextEditingController nameController = TextEditingController(
-      text: product?.name ?? "",
-    );
-    TextEditingController descriptionController = TextEditingController(
-      text: product?.description ?? "",
-    );
-    TextEditingController priceController = TextEditingController(
-      text: product?.price.toString() ?? "",
-    );
-
-    showDialog(
-      context: context, 
-      builder: (_) => AlertDialog(
-        title: Text(product == null ? "Tambah Produk" : "Edit Produk"),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameController,
-              decoration: InputDecoration(labelText: "Nama"),
-            ),
-            TextField(
-              controller: descriptionController,
-              decoration: InputDecoration(labelText: "Deskripsi"),
-            ),
-            TextField(
-              controller: priceController,
-              decoration: InputDecoration(labelText: "Harga"),
-              keyboardType: TextInputType.number,
-            ),
-          ],
-        ),
-        actions: [
-          ElevatedButton(
-            onPressed: (){
-              final newProduct = ProductModel(
-                name: nameController.text, 
-                description: descriptionController.text, 
-                price: int.parse(priceController.text),
-                );
-                if (product == null) {
-                  addProducts(newProduct);
-                } else {
-                  updateProducts(index!, newProduct);
-                }
-            } , child: Text("Simpan"),
-            ),
-        ],
-      ),
-    );
-  }
-
+  
   // metode get user
   Future<void> getUser() async {
     final prefs = await SharedPreferences.getInstance();
@@ -194,6 +103,7 @@ class _HomePageState extends State<HomePage> {
                                 style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                               ),
                               const SizedBox(width: 6),
+                              
                               const Icon(
                                 Icons.verified,
                                 color: Colors.green,
@@ -230,66 +140,32 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               const SizedBox(height: 20),
-              // Daftar Produk diletakkan di luar header (di bawahnya) agar layout tidak error
-              Expanded(
-                child: products.isEmpty
-                    ? const Center(child: Text("Belum ada produk"))
-                    : ListView.builder(
-                        itemCount: products.length,
-                        itemBuilder: (context, index) {
-                          final product = products[index];
-
-                          return Card(
-                            margin: const EdgeInsets.only(bottom: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(15),
-                            ),
-                            child: ListTile(
-                              contentPadding: const EdgeInsets.all(15),
-                              title: Text(
-                                product.name,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              subtitle: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const SizedBox(height: 5),
-                                  Text("RP ${product.price}"),
-                                  const SizedBox(height: 5),
-                                  Text(product.description),
-                                ],
-                              ),
-                              leading: IconButton(
-                                icon: const Icon(
-                                  Icons.edit,
-                                  color: Colors.blue,
-                                ),
-                                onPressed: () => showForm(product: products[index], index: index),
-                              ),
-                              trailing: IconButton(
-                                icon: const Icon(
-                                  Icons.delete,
-                                  color: Colors.red,
-                                ),
-                                onPressed: () => deleteProducts(index),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
+              Row(
+                mainAxisAlignment: .spaceBetween,
+                children: [
+                  Text(
+                  "Total Produk : ${totalProducts.toString()}",
+                  style: const TextStyle(fontWeight: FontWeight.bold),
               ),
+                //tombol kehalaman tombol produk
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ProductPage(),
+                      ),
+                    );
+                  }, child: const Text("Lihat Selengkapnya"),
+                  ),
+              ],
+              ),
+            
             ],
           ),
         ),
       ),
       // Fungsi Increment untuk menambah produk
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => showForm(),
-        backgroundColor: Colors.purple,
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
     );
   }
 }
