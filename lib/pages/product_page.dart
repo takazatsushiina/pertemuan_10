@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:pertemuan10_2306021/models/product_model.dart';
-import 'package:pertemuan10_2306021/pages/product_detail_page.dart';
-import 'package:pertemuan10_2306021/widgets/product_card.dart';
+import '/models/product_model.dart';
+import 'product_detail_page.dart';
+import '/widgets/product_card.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:convert';
@@ -35,9 +35,7 @@ class _ProductPageState extends State<ProductPage> {
 
   Future<void> saveProducts() async {
     final prefs = await SharedPreferences.getInstance();
-    List<String> productList = products
-        .map((item) => item.toJson())
-        .toList();
+    List<String> productList = products.map((item) => item.toJson()).toList();
     await prefs.setStringList('products', productList);
   }
 
@@ -63,9 +61,9 @@ class _ProductPageState extends State<ProductPage> {
       products.removeAt(index);
     });
     await saveProducts();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Produk berhasil dihapus")),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text("Produk berhasil dihapus")));
   }
 
   //method untuk convert gambar
@@ -78,8 +76,9 @@ class _ProductPageState extends State<ProductPage> {
     TextEditingController nameController = TextEditingController(
       text: product?.name ?? "",
     );
-    TextEditingController descriptionController =
-        TextEditingController(text: product?.description ?? "");
+    TextEditingController descriptionController = TextEditingController(
+      text: product?.description ?? "",
+    );
     TextEditingController priceController = TextEditingController(
       text: product?.price.toString() ?? "",
     );
@@ -92,9 +91,7 @@ class _ProductPageState extends State<ProductPage> {
 
     //method untuk memilih gambar dari gallery
     Future<void> pickImage(StateSetter SetDialogState) async {
-      final XFile? image = await picker.pickImage(
-        source: ImageSource.gallery,
-      );
+      final XFile? image = await picker.pickImage(source: ImageSource.gallery);
 
       if (image != null) {
         SetDialogState(() {
@@ -123,22 +120,20 @@ class _ProductPageState extends State<ProductPage> {
         );
       }
       if (product?.image.isNotEmpty ?? false) {
-              return Image.memory(
-              base64Decode(product!.image),
-              width: 150,
-              height: 150,
-              fit: BoxFit.cover,
-              );
-            }
-          return const SizedBox.shrink();
+        return Image.memory(
+          base64Decode(product!.image),
+          width: 150,
+          height: 150,
+          fit: BoxFit.cover,
+        );
+      }
+      return const SizedBox.shrink();
     }
 
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text(
-          product == null ? "Tambah Produk" : "Edit Produk",
-        ),
+        title: Text(product == null ? "Tambah Produk" : "Edit Produk"),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -148,37 +143,32 @@ class _ProductPageState extends State<ProductPage> {
             ),
             TextField(
               controller: descriptionController,
-              decoration: const InputDecoration(
-                labelText: "Deskripsi",
-              ),
+              decoration: const InputDecoration(labelText: "Deskripsi"),
             ),
             TextField(
               controller: priceController,
               decoration: const InputDecoration(labelText: "Harga"),
               keyboardType: TextInputType.number,
             ),
-            const SizedBox(height: 10,),
+            const SizedBox(height: 10),
             ElevatedButton.icon(
               onPressed: () => pickImage(setState),
               icon: const Icon(Icons.image),
               label: const Text("Pilih Gambar"),
             ),
-            const SizedBox(height: 10,),
-            buildPreviewImage()
+            const SizedBox(height: 10),
+            buildPreviewImage(),
           ],
         ),
         actions: [
           ElevatedButton(
             onPressed: () async {
-              String imageBase64 = product?.image?? "";
-              if (selectedImage != null){
-                imageBase64 = await convertImageToBase64(
-                  selectedImage!
-                  );
+              String imageBase64 = product?.image ?? "";
+              if (selectedImage != null) {
+                imageBase64 = await convertImageToBase64(selectedImage!);
               }
 
               final newProduct = ProductModel(
-
                 name: nameController.text,
                 description: descriptionController.text,
                 price: int.tryParse(priceController.text) ?? 0,
@@ -206,7 +196,7 @@ class _ProductPageState extends State<ProductPage> {
           "Produk",
           style: TextStyle(color: Colors.white, fontWeight: .bold),
         ),
-        backgroundColor: Colors.green,
+        backgroundColor: Colors.purple,
         leading: IconButton(
           onPressed: () => Navigator.pop(context),
           icon: Icon(Icons.chevron_left, color: Colors.white),
@@ -238,10 +228,8 @@ class _ProductPageState extends State<ProductPage> {
                         return ProductCard(
                           product: product,
                           onDelete: () => deleteProduct(index),
-                          onEdit: () => showForm(
-                            product: product,
-                            index: index,
-                          ),
+                          onEdit: () =>
+                              showForm(product: product, index: index),
                           onTap: () => Navigator.push(
                             context,
                             MaterialPageRoute(

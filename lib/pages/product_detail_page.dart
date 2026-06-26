@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:pertemuan10_2306021/models/product_model.dart';
+import '/models/product_model.dart';
 
 class ProductDetailPage extends StatelessWidget {
   final ProductModel product;
@@ -18,10 +18,10 @@ class ProductDetailPage extends StatelessWidget {
           children: [
             product.image.isNotEmpty
                 ? Image.memory(
-                  base64Decode(product.image),
-                  width: 150,
-                  height: 150,
-                  fit: BoxFit.cover,
+                    base64Decode(product.image),
+                    width: 150,
+                    height: 150,
+                    fit: BoxFit.cover,
                   )
                 : const Icon(Icons.image, size: 120),
             Text(

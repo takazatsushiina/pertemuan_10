@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:pertemuan10_2306021/models/product_model.dart';
+import '/models/product_model.dart';
 
 class ProductCard extends StatelessWidget {
   final ProductModel product;
@@ -23,9 +23,7 @@ class ProductCard extends StatelessWidget {
       onTap: onTap,
       child: Card(
         margin: const EdgeInsets.only(bottom: 12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(15),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
         child: ListTile(
           contentPadding: const EdgeInsets.all(15),
           title: Text(
@@ -38,14 +36,14 @@ class ProductCard extends StatelessWidget {
             children: [
               Text("Rp ${product.price}"),
               Text(product.description),
-            product.image.isNotEmpty
-              ? Image.memory(
-                  base64Decode(product.image),
-                  width: 120,
-                  height: 120,
-                  fit: BoxFit.cover,
-                  )
-                  :const Icon(Icons.image, size: 120),
+              product.image.isNotEmpty
+                  ? Image.memory(
+                      base64Decode(product.image),
+                      width: 120,
+                      height: 120,
+                      fit: BoxFit.cover,
+                    )
+                  : const Icon(Icons.image, size: 120),
             ],
           ),
           leading: onEdit != null

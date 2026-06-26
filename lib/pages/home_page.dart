@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:pertemuan10_2306021/pages/product_page.dart';
+import '/pages/product_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/product_model.dart';
 import 'login_page.dart';
@@ -41,10 +41,6 @@ class _HomePageState extends State<HomePage> {
           .toList();
     });
   }
-
-
-
-
 
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
@@ -116,7 +112,7 @@ class _HomePageState extends State<HomePage> {
                               const SizedBox(width: 6),
                               const Icon(
                                 Icons.verified,
-                                color: Colors.green,
+                                color: Colors.purple,
                                 size: 20,
                               ),
                             ],
@@ -167,7 +163,7 @@ class _HomePageState extends State<HomePage> {
                     child: const Text("Lihat selengkapnya"),
                   ),
                 ],
-              ),     // Product list
+              ), // Product list
             ],
           ),
         ),
