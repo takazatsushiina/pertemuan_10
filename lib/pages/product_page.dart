@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:pertemuan_10/pages/product_detail_page.dart';
-import 'package:pertemuan_10/widgets/product_card.dart';
-import '../models/product_models.dart';
+import 'package:pertemuan10_2306021/models/product_model.dart';
+import 'package:pertemuan10_2306021/pages/product_detail_page.dart';
+import 'package:pertemuan10_2306021/widgets/product_card.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:convert';
+import 'dart:typed_data';
 
 class ProductPage extends StatefulWidget {
   const ProductPage({super.key});
@@ -13,141 +16,203 @@ class ProductPage extends StatefulWidget {
 
 class _ProductPageState extends State<ProductPage> {
   List<ProductModel> products = [];
-
   Future<void> loadProducts() async {
-    final res = await SharedPreferences.getInstance();
-    List<String> productList = res.getStringList('products') ?? [];;
+    final prefs = await SharedPreferences.getInstance();
+    List<String> productList = prefs.getStringList('products') ?? [];
     setState(() {
-      products = productList 
-      .reversed
-      .take(3)
-      .map((item) => ProductModel.fromJson(item))
-      .toList();
+      products = productList
+          //.take(3)
+          .map((item) => ProductModel.fromJson(item))
+          .toList();
     });
   }
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     loadProducts();
   }
 
-  //metode save product
   Future<void> saveProducts() async {
-    final res = await SharedPreferences.getInstance();
-    List<String> productList = products.map((item) => item.toJson()).toList();
-    await res.setStringList('products', productList);
+    final prefs = await SharedPreferences.getInstance();
+    List<String> productList = products
+        .map((item) => item.toJson())
+        .toList();
+    await prefs.setStringList('products', productList);
   }
 
-  //metode add product
-  Future<void> addProducts(ProductModel product) async {
+  Future<void> addProduct(ProductModel product) async {
     setState(() {
       products.add(product);
     });
-
     await saveProducts();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Produk berhasil ditambahkan")),
-      );
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Produk berhasil ditambahkan")),
+    );
   }
 
-
-  // metode update product
-  Future<void> updateProducts(int index, ProductModel product) async {
+  Future<void> updateProduct(int index, ProductModel product) async {
     setState(() {
       products[index] = product;
     });
-
     await saveProducts();
   }
 
-  //metode delete product 
-  Future<void> deleteProducts(int index) async {
+  Future<void> deleteProduct(int index) async {
     setState(() {
       products.removeAt(index);
     });
-
     await saveProducts();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Produk berhasil dihapus")),
-      );
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Produk berhasil dihapus")),
+    );
+  }
+
+  //method untuk convert gambar
+  Future<String> convertImageToBase64(XFile image) async {
+    Uint8List bytes = await image.readAsBytes();
+    return base64Encode(bytes);
   }
 
   void showForm({ProductModel? product, int? index}) {
     TextEditingController nameController = TextEditingController(
       text: product?.name ?? "",
     );
-    TextEditingController descriptionController = TextEditingController(
-      text: product?.description ?? "",
-    );
+    TextEditingController descriptionController =
+        TextEditingController(text: product?.description ?? "");
     TextEditingController priceController = TextEditingController(
       text: product?.price.toString() ?? "",
     );
+    TextEditingController imgController = TextEditingController(
+      text: product?.image ?? "",
+    );
+
+    XFile? selectedImage;
+    final ImagePicker picker = ImagePicker();
+
+    //method untuk memilih gambar dari gallery
+    Future<void> pickImage(StateSetter SetDialogState) async {
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.gallery,
+      );
+
+      if (image != null) {
+        SetDialogState(() {
+          selectedImage = image;
+          imgController.text = image.path;
+        });
+      }
+    }
+
+    Widget buildPreviewImage() {
+      if (selectedImage != null) {
+        return FutureBuilder<Uint8List>(
+          future: selectedImage!.readAsBytes(),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return const CircularProgressIndicator();
+            }
+
+            return Image.memory(
+              snapshot.data!,
+              width: 150,
+              height: 150,
+              fit: BoxFit.cover,
+            );
+          },
+        );
+      }
+      if (product?.image.isNotEmpty ?? false) {
+              return Image.memory(
+              base64Decode(product!.image),
+              width: 150,
+              height: 150,
+              fit: BoxFit.cover,
+              );
+            }
+          return const SizedBox.shrink();
+    }
 
     showDialog(
-      context: context, 
+      context: context,
       builder: (_) => AlertDialog(
-        title: Text(product == null ? "Tambah Produk" : "Edit Produk"),
+        title: Text(
+          product == null ? "Tambah Produk" : "Edit Produk",
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: nameController,
-              decoration: InputDecoration(labelText: "Nama"),
+              decoration: const InputDecoration(labelText: "Nama"),
             ),
             TextField(
               controller: descriptionController,
-              decoration: InputDecoration(labelText: "Deskripsi"),
+              decoration: const InputDecoration(
+                labelText: "Deskripsi",
+              ),
             ),
             TextField(
               controller: priceController,
-              decoration: InputDecoration(labelText: "Harga"),
+              decoration: const InputDecoration(labelText: "Harga"),
               keyboardType: TextInputType.number,
             ),
+            const SizedBox(height: 10,),
+            ElevatedButton.icon(
+              onPressed: () => pickImage(setState),
+              icon: const Icon(Icons.image),
+              label: const Text("Pilih Gambar"),
+            ),
+            const SizedBox(height: 10,),
+            buildPreviewImage()
           ],
         ),
         actions: [
           ElevatedButton(
-            onPressed: (){
+            onPressed: () async {
+              String imageBase64 = product?.image?? "";
+              if (selectedImage != null){
+                imageBase64 = await convertImageToBase64(
+                  selectedImage!
+                  );
+              }
+
               final newProduct = ProductModel(
-                name: nameController.text, 
-                description: descriptionController.text, 
-                price: int.parse(priceController.text),
-                );
-                if (product == null) {
-                  addProducts(newProduct);
-                } else {
-                  updateProducts(index!, newProduct);
-                }
-            } , child: Text("Simpan"),
-            ),
+
+                name: nameController.text,
+                description: descriptionController.text,
+                price: int.tryParse(priceController.text) ?? 0,
+                image: imageBase64,
+              );
+              if (product == null) {
+                addProduct(newProduct);
+              } else {
+                updateProduct(index!, newProduct);
+              }
+              Navigator.pop(context);
+            },
+            child: const Text("Simpan"),
+          ),
         ],
       ),
     );
   }
 
-
-
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Produk", style: TextStyle(
-          color: Colors.white,
-          fontWeight: .bold
-          ),
+        title: Text(
+          "Produk",
+          style: TextStyle(color: Colors.white, fontWeight: .bold),
         ),
-        backgroundColor: Colors.purple,
+        backgroundColor: Colors.green,
         leading: IconButton(
-          onPressed: () => Navigator.pop(context), 
-          icon: Icon(
-            Icons.chevron_left,
-            color: Colors.white,
-          )),
+          onPressed: () => Navigator.pop(context),
+          icon: Icon(Icons.chevron_left, color: Colors.white),
+        ),
       ),
+
       body: Container(
         margin: EdgeInsets.all(20),
         child: Column(
@@ -156,34 +221,38 @@ class _ProductPageState extends State<ProductPage> {
               children: [
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () => showForm(), 
-                    child: const Text("Tambah Produk"),
-                    ),
+                    onPressed: () => showForm(),
+                    child: const Text("Tambah produk"),
                   ),
+                ),
               ],
             ),
-            const SizedBox(height: 20,),
-             Expanded(
-                child: products.isEmpty
-                    ? const Center(child: Text("Belum ada produk"))
-                    : ListView.builder(
-                        itemCount: products.length,
-                        itemBuilder: (context, index) {
-                          final product = products[index];
-                          return ProductCard(
-                            product: product, 
-                            onDelete: () => deleteProducts(index),
-                            onEdit: () =>
-                            showForm(product: product, index: index),
-                            onTap: () => Navigator.push(
-                              context, 
-                              MaterialPageRoute(builder: (_) => ProductDetailPage(product: product))
-                            )
-                        
-                       );    
+            const SizedBox(height: 20),
+            Expanded(
+              child: products.isEmpty
+                  ? const Center(child: Text("Belum ada produk"))
+                  : ListView.builder(
+                      itemCount: products.length,
+                      itemBuilder: (context, index) {
+                        final product = products[index];
+                        return ProductCard(
+                          product: product,
+                          onDelete: () => deleteProduct(index),
+                          onEdit: () => showForm(
+                            product: product,
+                            index: index,
+                          ),
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  ProductDetailPage(product: product),
+                            ),
+                          ),
+                        );
                       },
-                      ),
-              ),
+                    ),
+            ),
           ],
         ),
       ),
